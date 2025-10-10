@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptShooter</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="screen" id="main-screen">
+    <div class="card">
+      <header class="card-header">
+        <div>
+          <h1 class="title">PromptShooter</h1>
+          <p class="subtitle">一键把同一提示词发送到多个平台</p>
+        </div>
+        <button class="flat-button" id="open-settings">设置</button>
+      </header>
+      <textarea id="prompt-input" placeholder="在此输入你的提示词……" rows="4"></textarea>
+      <div class="section-title">选择平台和模型</div>
+      <div class="platform-list" id="platform-list">
+        <div class="platform-row" data-platform="chatgpt">
+          <div class="platform-info">
+            <img src="assets/logos/chatgpt.png" alt="ChatGPT logo" class="logo-img">
+            <div class="platform-meta">
+              <span class="platform-name">ChatGPT</span>
+              <span class="platform-model" data-selected-label="chatgpt"></span>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" value="chatgpt" data-platform-checkbox>
+            <span class="indicator"></span>
+          </label>
+        </div>
+        <div class="platform-row" data-platform="gemini">
+          <div class="platform-info">
+            <img src="assets/logos/gemini.png" alt="Gemini logo" class="logo-img">
+            <div class="platform-meta">
+              <span class="platform-name">Gemini</span>
+              <span class="platform-model" data-selected-label="gemini"></span>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" value="gemini" data-platform-checkbox>
+            <span class="indicator"></span>
+          </label>
+        </div>
+        <div class="platform-row" data-platform="claude">
+          <div class="platform-info">
+            <img src="assets/logos/Claude.png" alt="Claude logo" class="logo-img">
+            <div class="platform-meta">
+              <span class="platform-name">Claude</span>
+              <span class="platform-model" data-selected-label="claude"></span>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" value="claude" data-platform-checkbox>
+            <span class="indicator"></span>
+          </label>
+        </div>
+      </div>
+      <div class="summary-text" id="platform-summary">已选 0 个平台 · 将打开 0 个标签页</div>
+      <button id="send-button" class="primary-btn" disabled>一键发送</button>
+    </div>
+  </div>
+
+  <div class="screen hidden" id="settings-screen">
+    <div class="card">
+      <header class="card-header">
+        <button class="flat-button" id="close-settings">返回</button>
+        <div>
+          <h1 class="title">设置</h1>
+          <p class="subtitle">配置默认模型</p>
+        </div>
+        <span class="spacer"></span>
+      </header>
+      <div class="settings-block" data-settings-platform="chatgpt">
+        <div class="platform-info">
+          <img src="assets/logos/chatgpt.png" alt="ChatGPT" class="logo-img">
+          <span class="platform-name">ChatGPT</span>
+        </div>
+        <div class="settings-options">
+          <label><input type="radio" name="chatgpt-default" value="gpt-5-thinking">GPT-5 Thinking</label>
+          <label><input type="radio" name="chatgpt-default" value="gpt-5-insta">GPT-5 Instant</label>
+        </div>
+      </div>
+      <div class="settings-block" data-settings-platform="gemini">
+        <div class="platform-info">
+          <img src="assets/logos/gemini.png" alt="Gemini" class="logo-img">
+          <span class="platform-name">Gemini</span>
+        </div>
+        <div class="settings-options">
+          <label><input type="radio" name="gemini-default" value="2.5-pro">2.5 Pro</label>
+          <label><input type="radio" name="gemini-default" value="2.5-flash">2.5 Flash</label>
+        </div>
+      </div>
+      <div class="settings-block" data-settings-platform="claude">
+        <div class="platform-info">
+          <img src="assets/logos/Claude.png" alt="Claude" class="logo-img">
+          <span class="platform-name">Claude</span>
+        </div>
+        <div class="settings-options">
+          <label><input type="radio" name="claude-default" value="sonnet-4.5">Sonnet 4.5</label>
+          <label><input type="radio" name="claude-default" value="opus-4.1">Opus 4.1</label>
+        </div>
+        <label class="settings-thinking"><input type="checkbox" id="claude-default-thinking">extended thinking</label>
+      </div>
+      <button id="save-settings" class="primary-btn">保存</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
