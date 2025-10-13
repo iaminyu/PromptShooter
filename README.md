@@ -11,36 +11,7 @@
 
 ## 安装方法
 
-### 1. 生成图标文件
-
-首先需要生成图标文件。有以下几种方式：
-
-#### 方式 A: 使用命令行工具（推荐）
-
-```bash
-# 安装 librsvg (macOS)
-brew install librsvg
-
-# 生成图标
-./generate-icons.sh
-```
-
-#### 方式 B: 使用在线工具
-
-1. 访问 https://favicon.io/ 或 https://www.favicon-generator.org/
-2. 上传 `icons/icon.svg`
-3. 下载生成的 PNG 文件
-4. 重命名并放入 `icons/` 目录:
-   - icon16.png
-   - icon32.png
-   - icon48.png
-   - icon128.png
-
-#### 方式 C: 临时占位图标（仅用于开发测试）
-
-如果只是想快速测试，可以使用任意小图片重命名为以上文件名。
-
-### 2. 加载到 Chrome
+### 1. 加载到 Chrome
 
 1. 打开 Chrome 浏览器
 2. 访问 `chrome://extensions/`
