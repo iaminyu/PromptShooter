@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,12 +12,14 @@
       <header class="card-header">
         <div>
           <h1 class="title">PromptShooter</h1>
-          <p class="subtitle">一键把同一提示词发送到多个平台</p>
+          <p class="subtitle" data-i18n-key="main.subtitle"></p>
         </div>
-        <button class="flat-button" id="open-settings">设置</button>
       </header>
-      <textarea id="prompt-input" placeholder="在此输入你的提示词……" rows="4"></textarea>
-      <div class="section-title">选择平台和模型</div>
+      <textarea id="prompt-input" rows="4" data-i18n-key="prompt.placeholder" data-i18n-attr="placeholder"></textarea>
+      <div class="section-header">
+        <div class="section-title" data-i18n-key="main.sectionTitle"></div>
+        <a href="#" class="link-action" id="open-settings" data-i18n-key="main.editDefaults"></a>
+      </div>
       <div class="platform-list" id="platform-list">
         <div class="platform-row" data-platform="chatgpt">
           <div class="platform-info">
@@ -59,21 +61,28 @@
           </label>
         </div>
       </div>
-      <div class="summary-text" id="platform-summary">已选 0 个平台 · 将打开 0 个标签页</div>
-      <button id="send-button" class="primary-btn" disabled>一键发送</button>
+      <div class="summary-text" id="platform-summary"></div>
+      <button id="send-button" class="primary-btn" disabled data-i18n-key="main.send"></button>
     </div>
   </div>
 
   <div class="screen hidden" id="settings-screen">
     <div class="card">
-      <header class="card-header">
-        <button class="flat-button" id="close-settings">返回</button>
-        <div>
-          <h1 class="title">设置</h1>
-          <p class="subtitle">配置默认模型</p>
+      <header class="card-header settings-header">
+        <button class="flat-button" id="close-settings" data-i18n-key="settings.back"></button>
+        <div class="settings-header-text">
+          <h1 class="title" data-i18n-key="settings.title"></h1>
+          <p class="subtitle" data-i18n-key="settings.subtitle"></p>
         </div>
         <span class="spacer"></span>
       </header>
+      <div class="settings-block language-block">
+        <label class="language-label" for="language-select" data-i18n-key="settings.languageLabel"></label>
+        <div class="language-select-wrapper">
+          <select id="language-select" class="language-select"></select>
+          <span class="language-hint" data-i18n-key="settings.languageHint"></span>
+        </div>
+      </div>
       <div class="settings-block" data-settings-platform="chatgpt">
         <div class="platform-info">
           <img src="assets/logos/chatgpt.png" alt="ChatGPT" class="logo-img">
@@ -103,9 +112,12 @@
           <label><input type="radio" name="claude-default" value="sonnet-4.5">Sonnet 4.5</label>
           <label><input type="radio" name="claude-default" value="opus-4.1">Opus 4.1</label>
         </div>
-        <label class="settings-thinking"><input type="checkbox" id="claude-default-thinking">extended thinking</label>
+        <label class="settings-thinking">
+          <input type="checkbox" id="claude-default-thinking">
+          <span data-i18n-key="claude.extendedThinkingLabel"></span>
+        </label>
       </div>
-      <button id="save-settings" class="primary-btn">保存</button>
+      <button id="save-settings" class="primary-btn" data-i18n-key="settings.save"></button>
     </div>
   </div>
 
