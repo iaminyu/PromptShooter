@@ -167,6 +167,40 @@ function waitForElement(selectors, timeout = 10000) {
   });
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function waitForSendButtonReady(selectors, timeout = 6000) {
+  const deadline = Date.now() + timeout;
+  let button = null;
+
+  while (Date.now() < deadline) {
+    button = findElement(selectors.sendButton);
+
+    if (!button || !isElementVisible(button)) {
+      button = null;
+      await sleep(70);
+      continue;
+    }
+
+    const ariaDisabled = button.getAttribute('aria-disabled');
+    const isDisabled = button.disabled === true || ariaDisabled === 'true';
+
+    if (!isDisabled) {
+      return button;
+    }
+
+    await sleep(110);
+  }
+
+  if (!button) {
+    button = await waitForElement(selectors.sendButton, 5000);
+  }
+
+  return button;
+}
+
 // 模拟用户输入
 function simulateInput(element, text) {
   console.log('[PromptShooter] 开始填充内容，长度:', text.length);
@@ -320,19 +354,12 @@ async function fillAndSendPrompt(prompt) {
     return;
   }
 
-  // 确保页面完全加载
-  if (document.readyState !== 'complete') {
-    console.log('[PromptShooter] 等待页面加载完成...');
+  if (document.readyState === 'loading') {
+    console.log('[PromptShooter] 等待 DOMContentLoaded...');
     await new Promise(resolve => {
-      window.addEventListener('load', resolve, { once: true });
+      document.addEventListener('DOMContentLoaded', resolve, { once: true });
     });
-    console.log('[PromptShooter] 页面已加载完成');
   }
-
-  // 额外等待，确保关键组件渲染
-  const renderDelay = selectors.name === 'Gemini' ? 500 : 250;
-  console.log('[PromptShooter] 等待页面渲染...', renderDelay);
-  await new Promise(resolve => setTimeout(resolve, renderDelay));
 
   console.log(`[PromptShooter-${selectors.name}] 平台识别成功`);
   console.log(`[PromptShooter-${selectors.name}] 输入框选择器:`, selectors.input);
@@ -348,51 +375,18 @@ async function fillAndSendPrompt(prompt) {
     simulateInput(inputElement, prompt);
     console.log(`[PromptShooter-${selectors.name}] ✅ 已填充提示词`);
 
-    // 等待页面识别内容（缩短等待时间，避免假死感）
-    console.log(`[PromptShooter-${selectors.name}] 等待页面识别内容...`);
-    const waitTime = selectors.name === 'Gemini' ? 800 : 320;
-    await new Promise(resolve => setTimeout(resolve, waitTime));
-
-    // 等待发送按钮出现并变为可用
+    // 查找并等待发送按钮可用
     console.log(`[PromptShooter-${selectors.name}] 查找发送按钮...`);
-    let sendButton = await waitForElement(selectors.sendButton);
-    console.log(`[PromptShooter-${selectors.name}] ✅ 找到发送按钮:`, sendButton);
+    let sendButton = await waitForSendButtonReady(selectors);
+    console.log(`[PromptShooter-${selectors.name}] ✅ 发送按钮准备就绪:`, sendButton);
 
-    // 等待按钮变为可用状态（逐步退避）
-    let attempts = 0;
-    while (attempts < 6) {
-      // 重新查找按钮（页面可能更新了）
-      sendButton = findElement(selectors.sendButton);
-      if (!sendButton) {
-        console.warn(`[PromptShooter-${selectors.name}] 按钮丢失，重新查找...`);
-        await new Promise(resolve => setTimeout(resolve, 180 * (attempts + 1)));
-        attempts++;
-        continue;
-      }
-
-      const ariaDisabled = sendButton.getAttribute('aria-disabled');
-      const isDisabled = sendButton.disabled === true || ariaDisabled === 'true';
-
-      console.log(`[PromptShooter-${selectors.name}] 按钮状态: disabled=${sendButton.disabled}, aria-disabled=${ariaDisabled}`);
-
-      if (!isDisabled) {
-        console.log(`[PromptShooter-${selectors.name}] ✅ 发送按钮已就绪`);
-        break;
-      }
-
-    console.log(`[PromptShooter-${selectors.name}] ⏳ 等待按钮可用... (${attempts + 1}/6)`);
-      await new Promise(resolve => setTimeout(resolve, 180 * (attempts + 1)));
-      attempts++;
-    }
-
-    // 最终检查，如果还是禁用就强制启用
     const finalAriaDisabled = sendButton.getAttribute('aria-disabled');
     if (sendButton.disabled === true || finalAriaDisabled === 'true') {
-      console.warn(`[PromptShooter-${selectors.name}] ⚠️ 发送按钮仍被禁用，尝试强制启用...`);
+      console.warn(`[PromptShooter-${selectors.name}] ⚠️ 发送按钮仍显示禁用状态，尝试激活...`);
       sendButton.removeAttribute('disabled');
       sendButton.disabled = false;
       sendButton.setAttribute('aria-disabled', 'false');
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await sleep(150);
     }
 
     console.log(`[PromptShooter-${selectors.name}] 点击发送按钮...`);

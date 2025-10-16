@@ -14,12 +14,8 @@ const PLATFORMS = {
   }
 };
 
-const PLATFORM_LOAD_DELAYS = {
-  chatgpt: { min: 120, max: 450 },
-  gemini: { min: 180, max: 550 },
-  claude: { min: 140, max: 480 },
-  default: { min: 150, max: 500 }
-};
+const MESSAGE_RETRY_INTERVAL = 90;
+const MESSAGE_RETRY_TIMEOUT = 4500;
 
 // 监听来自 popup 的消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -86,7 +82,7 @@ async function sendToPlatform(tab, prompt, config) {
   console.log(`[Background] 开始发送到平台: ${config.platform}, Tab ID: ${tab.id}`);
 
   // 等待标签页加载完成
-  await waitForTabLoad(tab.id, config.platform);
+  await waitForTabLoad(tab.id);
   console.log(`[Background] 标签页加载完成: ${tab.id}`);
 
   // 注入并执行内容脚本
@@ -98,9 +94,6 @@ async function sendToPlatform(tab, prompt, config) {
     });
     console.log(`[Background] content.js 注入成功`);
 
-    // 等待一小段时间确保 content script 初始化完成
-    await adaptiveSleep(config.platform, 80, 200);
-
     console.log(`[Background] 发送消息到 Tab ${tab.id}:`, {
       action: 'fillAndSend',
       prompt: prompt.substring(0, 50) + '...',
@@ -108,10 +101,9 @@ async function sendToPlatform(tab, prompt, config) {
       thinking: config.thinking
     });
 
-    // 向内容脚本发送消息，包含模型配置
-    const response = await chrome.tabs.sendMessage(tab.id, {
+    const response = await sendMessageWithRetry(tab.id, {
       action: 'fillAndSend',
-      prompt: prompt,
+      prompt,
       model: config.model,
       thinking: config.thinking
     });
@@ -124,17 +116,17 @@ async function sendToPlatform(tab, prompt, config) {
 }
 
 // 等待标签页加载完成
-function waitForTabLoad(tabId, platform) {
+function waitForTabLoad(tabId) {
   return new Promise((resolve) => {
     chrome.tabs.get(tabId, (tab) => {
       if (tab.status === 'complete') {
-        adaptiveSleep(platform, 120, 500).then(resolve);
+        resolve();
       } else {
         // 监听标签页更新
         const listener = (updatedTabId, changeInfo) => {
           if (updatedTabId === tabId && changeInfo.status === 'complete') {
             chrome.tabs.onUpdated.removeListener(listener);
-            adaptiveSleep(platform, 120, 500).then(resolve);
+            resolve();
           }
         };
         chrome.tabs.onUpdated.addListener(listener);
@@ -148,15 +140,24 @@ function waitForTabLoad(tabId, platform) {
     });
   });
 }
-function adaptiveSleep(platform, fallbackMin, fallbackMax) {
-  const config = PLATFORM_LOAD_DELAYS[platform] || PLATFORM_LOAD_DELAYS.default;
-  const minDelay = fallbackMin ?? config.min;
-  const maxDelay = fallbackMax ?? config.max;
-  return new Promise(resolve => {
-    const minTimer = setTimeout(() => resolve(), minDelay);
-    setTimeout(() => {
-      clearTimeout(minTimer);
-      resolve();
-    }, maxDelay);
-  });
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function sendMessageWithRetry(tabId, payload) {
+  const start = Date.now();
+  let lastErrorMessage = '';
+
+  while (Date.now() - start < MESSAGE_RETRY_TIMEOUT) {
+    try {
+      const response = await chrome.tabs.sendMessage(tabId, payload);
+      return response;
+    } catch (error) {
+      lastErrorMessage = error?.message || String(error);
+      await sleep(MESSAGE_RETRY_INTERVAL);
+    }
+  }
+
+  throw new Error(`发送消息失败: ${lastErrorMessage || 'unknown error'} (timeout ${MESSAGE_RETRY_TIMEOUT}ms)`);
 }
